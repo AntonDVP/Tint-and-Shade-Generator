@@ -2,7 +2,7 @@
 
 A web-based tool for generating and visualizing color systems based on a chosen base color. This project allows users to create a harmonious set of tints and shades, providing a comprehensive color palette for design projects.
 
-![Tint and Shade Generator](https://raw.githubusercontent.com/AntonDDVP/tint-and-shade-generator/assets/Tint-And-Shade-Generator.jpg)
+![Tint-And-Shade-Generator](https://github.com/AntonDVP/Tint-and-Shade-Generator/assets/68108545/b315d31e-2fac-40ba-b101-4aaf09aadfd7)
 
 ## Features
 
