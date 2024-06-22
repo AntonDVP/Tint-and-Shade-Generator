@@ -1,7 +1,5 @@
 # Tint-and-Shade-Generator
 
-# Tint and Shade Generator
-
 A web-based tool for generating and visualizing color systems based on a chosen base color. This project allows users to create a harmonious set of tints and shades, providing a comprehensive color palette for design projects.
 
 ## Features
@@ -79,7 +77,7 @@ Contributions and suggestions for improvements are welcome! Feel free to open an
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the Apache-2.0 license. See `LICENSE` for more information.
 
 ## Acknowledgements
 
