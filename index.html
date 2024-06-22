@@ -12,7 +12,6 @@
         h1.heading { font-size: 1.375rem; font-weight: 400; }
         h2.h2-heading { font-size: 1rem; font-weight: 500; }
         .input-label { font-size: 1rem; font-weight: 600; }
-        .color-swatch { width: 220px; display: flex; align-items: center; justify-content: center; border-radius: 0; margin: 0; padding: 1rem; box-sizing: border-box; }
         .color-info { font-size: 1rem; font-weight: bold; text-align: center; }
         .main-container { display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 300px; padding: 20px; background: #f7f7f7; border-right: 1px solid #e5e5e5; flex-shrink: 0; display: flex; flex-direction: column; justify-content: flex-start; height: 100vh; position: fixed; overflow-y: auto; }
@@ -25,8 +24,37 @@
         .color-container { display: flex; justify-content: center; align-items: stretch; gap: 0; }
         .codename { font-size: 1.25rem; font-weight: 400; }
         #hexColor { text-transform: uppercase; }
+        .hex-value  { font-size: 1rem; font-weight: 400; }
+        .cta {text-transform: uppercase; font-weight: 600;}
         .color-picker-wrapper { position: relative; width: 100%; height: 48px; margin-bottom: 1rem; }
-        #colorName { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1rem; font-weight: bold; text-transform: uppercase; pointer-events: none; text-shadow: 0 0 2px rgba(0,0,0,0.5); }
+        #colorName { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1rem; font-weight: 400; text-transform: none; pointer-events: none; text-shadow: 0 0 2px rgba(0,0,0,0.5); }
+        .color-swatch {
+            width: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+    @media (max-width: 768px) {
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; height: auto; overflow: visible; }
+            .sidebar { width: 100%; position: static; height: auto; border-right: none; border-bottom: 1px solid #e5e5e5; }
+            .content { margin-left: 0; width: 100%; box-sizing: border-box; }
+            .color-container { flex-direction: column; width: 100%; }
+            .color-swatch { 
+                width: 100%;
+                height: 120px; /* Set a fixed height for regular swatches on mobile */
+            }
+            .color-column, .color-stack, .main-color { width: 100%; }
+            
+            .main-color {
+                height: 240px; /* Make the main color swatch twice as tall on mobile */
+            }
+        }
+    }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -48,7 +76,7 @@
                 <label class="input-label block mb-2" for="rangeInput"># of Tints and Shades: <span id="rangeValue">10</span></label>
                 <input type="range" id="rangeInput" min="2" max="20" step="2" value="10" class="w-full">
             </div>
-            <button id="generateBtn" class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">Generate</button>
+            <button id="generateBtn" class="cta w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">Generate</button>
             
             <h2 class="input-label mt-8 mb-4">Export Options</h2>
             <button id="exportImage" class="w-full px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition duration-200 mb-2">Export as Image</button>
@@ -66,222 +94,222 @@
     </div>
     <script>
         const colorNameList = [
-            {name: 'Black', hex: '#000000'}, {name: 'White', hex: '#FFFFFF'}, {name: 'Red', hex: '#FF0000'},
-            {name: 'Green', hex: '#00FF00'}, {name: 'Blue', hex: '#0000FF'}, {name: 'Yellow', hex: '#FFFF00'},
-            {name: 'Cyan', hex: '#00FFFF'}, {name: 'Magenta', hex: '#FF00FF'}, {name: 'Silver', hex: '#C0C0C0'},
-            {name: 'Gray', hex: '#808080'}, {name: 'Maroon', hex: '#800000'}, {name: 'Olive', hex: '#808000'},
-            {name: 'Purple', hex: '#800080'}, {name: 'Teal', hex: '#008080'}, {name: 'Navy', hex: '#000080'},
-            {name: 'Orange', hex: '#FFA500'}, {name: 'Pink', hex: '#FFC0CB'}, {name: 'Brown', hex: '#A52A2A'},
-            {name: 'Violet', hex: '#EE82EE'}, {name: 'Indigo', hex: '#4B0082'}, {name: 'Turquoise', hex: '#40E0D0'},
-            {name: 'Gold', hex: '#FFD700'}, {name: 'Coral', hex: '#FF7F50'}, {name: 'Salmon', hex: '#FA8072'},
-            {name: 'Khaki', hex: '#F0E68C'}, {name: 'Plum', hex: '#DDA0DD'}, {name: 'Orchid', hex: '#DA70D6'},
-            {name: 'Sky Blue', hex: '#87CEEB'}, {name: 'Lime Green', hex: '#32CD32'}, {name: 'Crimson', hex: '#DC143C'}
-        ];
-    
-        document.addEventListener('DOMContentLoaded', () => {
-            const baseColorInput = document.getElementById('baseColor');
-            const hexColorInput = document.getElementById('hexColor');
-            const colorNameElement = document.getElementById('colorName');
-            const rangeInput = document.getElementById('rangeInput');
-            const rangeValue = document.getElementById('rangeValue');
-            const generateBtn = document.getElementById('generateBtn');
-            const tintsColumn = document.getElementById('tintsColumn');
-            const mainColorColumn = document.getElementById('mainColorColumn');
-            const shadesColumn = document.getElementById('shadesColumn');
-    
-            function getClosestColorName(hex) {
-                const color = tinycolor(hex);
-                const rgb = color.toRgb();
-                let closestColor = null;
-                let minDistance = Infinity;
-    
-                for (const namedColor of colorNameList) {
-                    const namedRgb = tinycolor(namedColor.hex).toRgb();
-                    const distance = Math.sqrt(
-                        Math.pow(rgb.r - namedRgb.r, 2) +
-                        Math.pow(rgb.g - namedRgb.g, 2) +
-                        Math.pow(rgb.b - namedRgb.b, 2)
-                    );
-    
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        closestColor = namedColor;
-                    }
-                }
-    
-                return closestColor ? closestColor.name : '';
+    {name: 'Black', hex: '#000000'}, {name: 'White', hex: '#FFFFFF'}, {name: 'Red', hex: '#FF0000'},
+    {name: 'Green', hex: '#00FF00'}, {name: 'Blue', hex: '#0000FF'}, {name: 'Yellow', hex: '#FFFF00'},
+    {name: 'Cyan', hex: '#00FFFF'}, {name: 'Magenta', hex: '#FF00FF'}, {name: 'Silver', hex: '#C0C0C0'},
+    {name: 'Gray', hex: '#808080'}, {name: 'Maroon', hex: '#800000'}, {name: 'Olive', hex: '#808000'},
+    {name: 'Purple', hex: '#800080'}, {name: 'Teal', hex: '#008080'}, {name: 'Navy', hex: '#000080'},
+    {name: 'Orange', hex: '#FFA500'}, {name: 'Pink', hex: '#FFC0CB'}, {name: 'Brown', hex: '#A52A2A'},
+    {name: 'Violet', hex: '#EE82EE'}, {name: 'Indigo', hex: '#4B0082'}, {name: 'Turquoise', hex: '#40E0D0'},
+    {name: 'Gold', hex: '#FFD700'}, {name: 'Coral', hex: '#FF7F50'}, {name: 'Salmon', hex: '#FA8072'},
+    {name: 'Khaki', hex: '#F0E68C'}, {name: 'Plum', hex: '#DDA0DD'}, {name: 'Orchid', hex: '#DA70D6'},
+    {name: 'Sky Blue', hex: '#87CEEB'}, {name: 'Lime Green', hex: '#32CD32'}, {name: 'Crimson', hex: '#DC143C'}
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+    const baseColorInput = document.getElementById('baseColor');
+    const hexColorInput = document.getElementById('hexColor');
+    const colorNameElement = document.getElementById('colorName');
+    const rangeInput = document.getElementById('rangeInput');
+    const rangeValue = document.getElementById('rangeValue');
+    const generateBtn = document.getElementById('generateBtn');
+    const tintsColumn = document.getElementById('tintsColumn');
+    const mainColorColumn = document.getElementById('mainColorColumn');
+    const shadesColumn = document.getElementById('shadesColumn');
+
+    function getClosestColorName(hex) {
+        const color = tinycolor(hex);
+        const rgb = color.toRgb();
+        let closestColor = null;
+        let minDistance = Infinity;
+
+        for (const namedColor of colorNameList) {
+            const namedRgb = tinycolor(namedColor.hex).toRgb();
+            const distance = Math.sqrt(
+                Math.pow(rgb.r - namedRgb.r, 2) +
+                Math.pow(rgb.g - namedRgb.g, 2) +
+                Math.pow(rgb.b - namedRgb.b, 2)
+            );
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestColor = namedColor;
             }
-    
-            function updateColorName(color) {
-                const colorObj = tinycolor(color);
-                const colorName = getClosestColorName(color);
-                colorNameElement.textContent = colorName;
-                colorNameElement.style.color = colorObj.isLight() ? '#000' : '#fff';
-            }
-    
-            baseColorInput.addEventListener('input', (e) => {
-                const color = e.target.value;
-                hexColorInput.value = color;
-                updateColorName(color);
-            });
-    
-            hexColorInput.addEventListener('input', (e) => {
-                const color = e.target.value;
-                if (tinycolor(color).isValid()) {
-                    baseColorInput.value = color;
-                    updateColorName(color);
-                }
-            });
-    
-            rangeInput.addEventListener('input', (e) => {
-                rangeValue.textContent = e.target.value;
-            });
-    
-            generateBtn.addEventListener('click', generateColorSystem);
-    
-            function generateColorSystem() {
-                const baseColor = tinycolor(hexColorInput.value);
-                const numSteps = parseInt(rangeInput.value, 10);
-                const halfSteps = Math.floor(numSteps / 2);
-                tintsColumn.innerHTML = '';
-                mainColorColumn.innerHTML = '';
-                shadesColumn.innerHTML = '';
-    
-                const tints = [];
-                const shades = [];
-    
-                // Generate tints
-                for (let i = halfSteps; i > 0; i--) {
-                    const tintFactor = i / (halfSteps + 1);
-                    const tint = tinycolor.mix(baseColor, '#ffffff', tintFactor * 100).toHexString();
-                    tints.push({ color: tint, label: `${(halfSteps - i + 1) * 100}` });
-                }
-    
-                // Main color
-                const mainColor = { color: baseColor.toHexString(), label: `${(halfSteps + 1) * 100}` };
-    
-                // Generate shades
-                for (let i = 1; i <= halfSteps; i++) {
-                    const shadeFactor = i / (halfSteps + 1);
-                    const shade = tinycolor.mix(baseColor, '#000000', shadeFactor * 100).toHexString();
-                    shades.push({ color: shade, label: `${(halfSteps + 1 + i) * 100}` });
-                }
-    
-                tints.forEach(({ color, label }) => {
-                    tintsColumn.appendChild(createColorSwatch(color, label));
-                });
-    
-                const mainSwatch = createColorSwatch(mainColor.color, mainColor.label);
-                mainSwatch.classList.add('highlight');
-                mainColorColumn.appendChild(mainSwatch);
-    
-                shades.forEach(({ color, label }) => {
-                    shadesColumn.appendChild(createColorSwatch(color, label));
-                });
-    
-                // Adjust the height of main color to match tints and shades columns
-                const totalHeight = Math.max(tintsColumn.scrollHeight, shadesColumn.scrollHeight);
-                mainSwatch.style.height = `${totalHeight}px`;
-            }
-    
-            function createColorSwatch(color, label) {
-                const swatch = document.createElement('div');
-                swatch.className = 'color-swatch';
-                swatch.style.backgroundColor = color;
-    
-                const info = document.createElement('div');
-                info.className = 'color-info';
-                info.style.color = tinycolor.mostReadable(color, ['#000', '#fff']).toHexString();
-                info.innerHTML = `<span class="codename">${label}</span><br><span class="hex-value">HEX: ${color.toUpperCase()}</span>`;
-    
-                const wcagInfo = document.createElement('div');
-                wcagInfo.className = 'wcag-info wcag-values';
-                const contrastWhite = tinycolor.readability(color, '#fff');
-                const contrastBlack = tinycolor.readability(color, '#000');
-                wcagInfo.innerHTML = `On White: ${contrastWhite.toFixed(2)} (${getContrastLevel(contrastWhite)})<br>On Black: ${contrastBlack.toFixed(2)} (${getContrastLevel(contrastBlack)})`;
-    
-                info.appendChild(wcagInfo);
-                swatch.appendChild(info);
-                return swatch;
-            }
-    
-            function getContrastLevel(contrast) {
-                if (contrast >= 7) return 'AAA';
-                if (contrast >= 4.5) return 'AA';
-                if (contrast >= 3) return 'AA Large';
-                return 'Fail';
-            }
-    
-            // Initialize with the default color
-            updateColorName(baseColorInput.value);
-    
-            // Trigger initial generation with default values
-            generateBtn.click();
+        }
+
+        return closestColor ? closestColor.name : '';
+    }
+
+    function updateColorName(color) {
+        const colorObj = tinycolor(color);
+        const colorName = getClosestColorName(color);
+        colorNameElement.textContent = colorName;
+        colorNameElement.style.color = colorObj.isLight() ? '#000' : '#fff';
+    }
+
+    baseColorInput.addEventListener('input', (e) => {
+        const color = e.target.value;
+        hexColorInput.value = color;
+        updateColorName(color);
+    });
+
+    hexColorInput.addEventListener('input', (e) => {
+        const color = e.target.value;
+        if (tinycolor(color).isValid()) {
+            baseColorInput.value = color;
+            updateColorName(color);
+        }
+    });
+
+    rangeInput.addEventListener('input', (e) => {
+        rangeValue.textContent = e.target.value;
+    });
+
+    generateBtn.addEventListener('click', generateColorSystem);
+
+    function generateColorSystem() {
+        const baseColor = tinycolor(hexColorInput.value);
+        const numSteps = parseInt(rangeInput.value, 10);
+        const halfSteps = Math.floor(numSteps / 2);
+        tintsColumn.innerHTML = '';
+        mainColorColumn.innerHTML = '';
+        shadesColumn.innerHTML = '';
+
+        const tints = [];
+        const shades = [];
+
+        // Generate tints
+        for (let i = halfSteps; i > 0; i--) {
+            const tintFactor = i / (halfSteps + 1);
+            const tint = tinycolor.mix(baseColor, '#ffffff', tintFactor * 100).toHexString();
+            tints.push({ color: tint, label: `${(halfSteps - i + 1) * 100}` });
+        }
+
+        // Main color
+        const mainColor = { color: baseColor.toHexString(), label: `${(halfSteps + 1) * 100}` };
+
+        // Generate shades
+        for (let i = 1; i <= halfSteps; i++) {
+            const shadeFactor = i / (halfSteps + 1);
+            const shade = tinycolor.mix(baseColor, '#000000', shadeFactor * 100).toHexString();
+            shades.push({ color: shade, label: `${(halfSteps + 1 + i) * 100}` });
+        }
+
+        tints.forEach(({ color, label }) => {
+            tintsColumn.appendChild(createColorSwatch(color, label));
         });
-        // Add this inside the DOMContentLoaded event listener, after the other event listeners
 
-document.getElementById('exportImage').addEventListener('click', exportAsImage);
-document.getElementById('exportText').addEventListener('click', exportAsText);
-document.getElementById('exportTable').addEventListener('click', exportAsTable);
-document.getElementById('exportTokens').addEventListener('click', exportAsDesignTokens);
+        const mainSwatch = createColorSwatch(mainColor.color, mainColor.label);
+        mainSwatch.classList.add('highlight');
+        mainColorColumn.appendChild(mainSwatch);
 
-function exportAsImage() {
-    const colorName = document.getElementById('colorName').textContent.toLowerCase().replace(/ /g, '-');
-    html2canvas(document.querySelector('.color-container')).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `color-system-${colorName}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-    });
-}
+        shades.forEach(({ color, label }) => {
+            shadesColumn.appendChild(createColorSwatch(color, label));
+        });
 
-function exportAsText() {
-    const colorName = document.getElementById('colorName').textContent.toLowerCase().replace(/ /g, '-');
-    let text = 'Color System:\n\n';
-    document.querySelectorAll('.color-swatch').forEach(swatch => {
-        const label = swatch.querySelector('.codename').textContent;
-        const hex = swatch.querySelector('.hex-value').textContent.split('HEX: ')[1]; // Extract only the HEX code
-        const wcag = swatch.querySelector('.wcag-info').textContent;
-        text += `${label}: ${hex}\nAccessibility (WCAG 2.2): ${wcag}\n\n`;
-    });
-    downloadFile(text, `color-system-${colorName}.txt`, 'text/plain');
-}
+        // Adjust the height of main color to match tints and shades columns
+        const totalHeight = Math.max(tintsColumn.scrollHeight, shadesColumn.scrollHeight);
+        mainSwatch.style.height = `${totalHeight}px`;
+    }
 
-function exportAsTable() {
-    const colorName = document.getElementById('colorName').textContent.toLowerCase().replace(/ /g, '-');
-    let csv = 'Label,HEX,Accessibility (WCAG 2.2)\n';
-    document.querySelectorAll('.color-swatch').forEach(swatch => {
-        const label = swatch.querySelector('.codename').textContent;
-        const hex = swatch.querySelector('.hex-value').textContent.split('HEX: ')[1]; // Extract only the HEX code
-        const wcag = swatch.querySelector('.wcag-info').textContent.replace(/\n/g, ' ');
-        csv += `${label},${hex},${wcag}\n`;
-    });
-    downloadFile(csv, `color-system-${colorName}.csv`, 'text/csv');
-}
+    function createColorSwatch(color, label) {
+        const swatch = document.createElement('div');
+        swatch.className = 'color-swatch';
+        swatch.style.backgroundColor = color;
 
-function exportAsDesignTokens() {
-    const colorName = document.getElementById('colorName').textContent.toLowerCase().replace(/ /g, '-');
-    let tokens = {
-        [colorName]: {}
-    };
-    document.querySelectorAll('.color-swatch').forEach(swatch => {
-        const label = swatch.querySelector('.codename').textContent;
-        const hex = swatch.querySelector('.hex-value').textContent.split('HEX: ')[1]; // Extract only the HEX code
-        tokens[colorName][label] = {
-            value: hex,
-            type: 'color'
+        const info = document.createElement('div');
+        info.className = 'color-info';
+        info.style.color = tinycolor.mostReadable(color, ['#000', '#fff']).toHexString();
+        info.innerHTML = `<span class="codename">${label}</span><br><span class="hex-value">HEX: ${color.toUpperCase()}</span>`;
+
+        const wcagInfo = document.createElement('div');
+        wcagInfo.className = 'wcag-info wcag-values';
+        const contrastWhite = tinycolor.readability(color, '#fff');
+        const contrastBlack = tinycolor.readability(color, '#000');
+        wcagInfo.innerHTML = `On White: ${contrastWhite.toFixed(2)} (${getContrastLevel(contrastWhite)})<br>On Black: ${contrastBlack.toFixed(2)} (${getContrastLevel(contrastBlack)})`;
+
+        info.appendChild(wcagInfo);
+        swatch.appendChild(info);
+        return swatch;
+    }
+
+    function getContrastLevel(contrast) {
+        if (contrast >= 7) return 'AAA';
+        if (contrast >= 4.5) return 'AA';
+        if (contrast >= 3) return 'AA Large';
+        return 'Fail';
+    }
+
+    // Initialize with the default color
+    updateColorName(baseColorInput.value);
+
+    // Trigger initial generation with default values
+    generateBtn.click();
+
+    // Export functions
+    document.getElementById('exportImage').addEventListener('click', exportAsImage);
+    document.getElementById('exportText').addEventListener('click', exportAsText);
+    document.getElementById('exportTable').addEventListener('click', exportAsTable);
+    document.getElementById('exportTokens').addEventListener('click', exportAsDesignTokens);
+
+    function exportAsImage() {
+        const colorName = document.getElementById('colorName').textContent.toLowerCase().replace(/ /g, '-');
+        html2canvas(document.querySelector('.color-container')).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `color-system-${colorName}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
+
+    function exportAsText() {
+        const colorName = document.getElementById('colorName').textContent.toLowerCase().replace(/ /g, '-');
+        let text = 'Color System:\n\n';
+        document.querySelectorAll('.color-swatch').forEach(swatch => {
+            const label = swatch.querySelector('.codename').textContent;
+            const hex = swatch.querySelector('.hex-value').textContent.split('HEX: ')[1]; // Extract only the HEX code
+            const wcag = swatch.querySelector('.wcag-info').textContent;
+            text += `${label}: ${hex}\nAccessibility (WCAG 2.2): ${wcag}\n\n`;
+        });
+        downloadFile(text, `color-system-${colorName}.txt`, 'text/plain');
+    }
+
+    function exportAsTable() {
+        const colorName = document.getElementById('colorName').textContent.toLowerCase().replace(/ /g, '-');
+        let csv = 'Label,HEX,Accessibility (WCAG 2.2)\n';
+        document.querySelectorAll('.color-swatch').forEach(swatch => {
+            const label = swatch.querySelector('.codename').textContent;
+            const hex = swatch.querySelector('.hex-value').textContent.split('HEX: ')[1]; // Extract only the HEX code
+            const wcag = swatch.querySelector('.wcag-info').textContent.replace(/\n/g, ' ');
+            csv += `${label},${hex},${wcag}\n`;
+        });
+        downloadFile(csv, `color-system-${colorName}.csv`, 'text/csv');
+    }
+
+    function exportAsDesignTokens() {
+        const colorName = document.getElementById('colorName').textContent.toLowerCase().replace(/ /g, '-');
+        let tokens = {
+            [colorName]: {}
         };
-    });
-    downloadFile(JSON.stringify(tokens, null, 2), `color-tokens-${colorName}.json`, 'application/json');
-}
+        document.querySelectorAll('.color-swatch').forEach(swatch => {
+            const label = swatch.querySelector('.codename').textContent;
+            const hex = swatch.querySelector('.hex-value').textContent.split('HEX: ')[1]; // Extract only the HEX code
+            tokens[colorName][label] = {
+                value: hex,
+                type: 'color'
+            };
+        });
+        downloadFile(JSON.stringify(tokens, null, 2), `color-tokens-${colorName}.json`, 'application/json');
+    }
 
-function downloadFile(content, fileName, contentType) {
-    const a = document.createElement("a");
-    const file = new Blob([content], { type: contentType });
-    a.href = URL.createObjectURL(file);
-    a.download = fileName;
-    a.click();
-}
+    function downloadFile(content, fileName, contentType) {
+        const a = document.createElement("a");
+        const file = new Blob([content], { type: contentType });
+        a.href = URL.createObjectURL(file);
+        a.download = fileName;
+        a.click();
+    }
+});
     </script>
 </body>
 </html>
